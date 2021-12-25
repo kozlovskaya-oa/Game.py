@@ -1,8 +1,15 @@
 import pygame
 import sys
+import os
 
-
+pygame.init()
 FPS = 50
+WIDTH = 700
+HEIGHT = 400
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+clock = pygame.time.Clock()
+
 
 def load_image(name, color_key=None):
     try:
@@ -20,27 +27,21 @@ def load_image(name, color_key=None):
     return image
 
 
-size = width, height = (700, 300)
-screen = pygame.display.set_mode(size)
-pygame.display.set_caption('Приключения Бобы')
-all_sprites = pygame.sprite.Group()
-
 def terminate():
     pygame.quit()
     sys.exit()
 
+
 def start_screen():
     intro_text = ["Приключения Бобы", "",
-                  "Преодолевай препятствия и выигрывай",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]
+                  "Преодолевай препятствия и выигрывай"]
 
-    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    fon = pygame.transform.scale(load_image('img.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
+        string_rendered = font.render(line, 1, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -57,3 +58,6 @@ def start_screen():
                 return  # начинаем игру
         pygame.display.flip()
         clock.tick(FPS)
+
+
+start_screen()
