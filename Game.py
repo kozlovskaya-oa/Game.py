@@ -6,9 +6,11 @@ pygame.init()
 FPS = 50
 WIDTH = 700
 HEIGHT = 400
+speed = 5
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
+all_sprites = pygame.sprite.Group()
 
 
 def load_image(name, color_key=None):
@@ -60,4 +62,18 @@ def start_screen():
         clock.tick(FPS)
 
 
-start_screen()
+fn = load_image("img_2.png")
+
+
+running = True
+while running:
+    while running:
+        all_sprites.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.blit(fn, (0, 0))
+        pygame.display.flip()
+        clock.tick(50)
+
+    pygame.quit()
