@@ -64,6 +64,7 @@ def start_screen():
 
 fn = load_image("img_2.png")
 
+start_screen()
 
 running = True
 while running:
