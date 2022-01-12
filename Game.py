@@ -4,8 +4,8 @@ import os
 
 pygame.init()
 FPS = 50
-WIDTH = 700
-HEIGHT = 400
+WIDTH = 1000
+HEIGHT = 500
 speed = 5
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -62,8 +62,8 @@ def start_screen():
         clock.tick(FPS)
 
 
-tile_images = {
-    'wall': load_image('img_1.png'), "empty": None}
+"""tile_images = {
+    'wall': load_image('img_1.png'), "empty": None}"""
 
 """all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -120,19 +120,43 @@ PLATFORM_HEIGHT = 32
 PLATFORM_COLOR = (255, 255, 255)
 
 
-level = [
-       "                        -",
-       "                        -",
-       "                        -",
-       "             --         -",
-       "                        -",
-       "                        -",
-       "                        -",
-       "                    --- -",
-       "                        -",
-       "                        -",
-       "       ---              -",
-       "-------------------------"]
+def load_level(filename):
+    filename = filename
+    # читаем уровень, убирая символы перевода строки
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+
+    # и подсчитываем максимальную длину
+    max_width = max(map(len, level_map))
+
+    # дополняем каждую строку пустыми клетками ('.')
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+
+tile_width = tile_height = 50
+
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_group, all_sprites)
+        if tile_type == "wall":
+            self.image = load_image('box.png')
+            self.rect = self.image.get_rect().move(
+                tile_width * pos_x, tile_height * pos_y)
+
+
+def generate_level(level):
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '#':
+                Tile('wall', x, y)
+    return x, y
+
 
 start_screen()
 
@@ -150,18 +174,8 @@ while running:
                     move_char(2)
                 if event.key == pygame.K_UP:
                     move_char(3)"""
+        level_x, level_y = generate_level(load_level('level.txt'))
         screen.blit(fn, (0, 0))
-        x = y = 0  # координаты
-        for row in level:  # вся строка
-            for col in row:  # каждый символ
-                if col == "-":
-                    pf = pygame.Surface((PLATFORM_WIDTH, PLATFORM_HEIGHT))
-                    pf.fill(pygame.Color(PLATFORM_COLOR))
-                    screen.blit(pf, (x, y))
-
-                x += PLATFORM_WIDTH  # блоки платформы ставятся на ширине блоков
-            y += PLATFORM_HEIGHT  # то же самое и с высотой
-            x = 0  # на каждой новой с
         all_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(50)
