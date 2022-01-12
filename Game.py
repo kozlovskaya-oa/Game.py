@@ -100,17 +100,17 @@ all_sprites.add(sprite)
 
 
 sprite.rect.x = 5
-sprite.rect.y = 290
+sprite.rect.y = 290"""
 
 
 
-def move_char(ind):
+def move_char(ind, pl):
     if ind == 1:
-        sprite.rect.x += 20
+        pl.rect.x += 20
     if ind == 2:
-        sprite.rect.x -= 20
+        pl.rect.x -= 20
     if ind == 3:
-        sprite.rect.y -= 20"""
+        pl.rect.y -= 20
 
 
 fn = load_image("img_2.png")
@@ -140,7 +140,6 @@ player_group = pygame.sprite.Group()
 tile_width = tile_height = 50
 
 
-
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -150,16 +149,29 @@ class Tile(pygame.sprite.Sprite):
                 tile_width * pos_x, tile_height * pos_y)
 
 
+class Player(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
+        self.image = player_image
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x + 15, tile_height * pos_y + 5)
+
+
+player_image = load_image('mar.png')
+
+
 def generate_level(level):
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '#':
                 Tile('wall', x, y)
-    return x, y
+            elif level[y][x] == '@':
+                new_player = Player(x, y)
+    return new_player, x, y
 
 
 start_screen()
-
+player, level_x, level_y = generate_level(load_level('level.txt'))
 running = True
 while running:
     while running:
@@ -168,13 +180,12 @@ while running:
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                """if event.key == pygame.K_RIGHT:
-                    move_char(1)
+                if event.key == pygame.K_RIGHT:
+                    move_char(1, player)
                 if event.key == pygame.K_LEFT:
-                    move_char(2)
+                    move_char(2, player)
                 if event.key == pygame.K_UP:
-                    move_char(3)"""
-        level_x, level_y = generate_level(load_level('level.txt'))
+                    move_char(3, player)
         screen.blit(fn, (0, 0))
         all_sprites.draw(screen)
         pygame.display.flip()
