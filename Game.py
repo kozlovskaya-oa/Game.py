@@ -102,17 +102,6 @@ all_sprites.add(sprite)
 sprite.rect.x = 5
 sprite.rect.y = 290"""
 
-
-
-def move_char(ind, pl):
-    if ind == 1:
-        pl.rect.x += 20
-    if ind == 2:
-        pl.rect.x -= 20
-    if ind == 3:
-        pl.rect.y -= 20
-
-
 fn = load_image("img_2.png")
 
 PLATFORM_WIDTH = 32
@@ -145,6 +134,7 @@ class Tile(pygame.sprite.Sprite):
         super().__init__(tiles_group, all_sprites)
         if tile_type == "wall":
             self.image = load_image('box.png')
+            self.mask = pygame.mask.from_surface(self.image)
             self.rect = self.image.get_rect().move(
                 tile_width * pos_x, tile_height * pos_y)
 
@@ -153,8 +143,47 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
         self.image = player_image
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y + 5)
+
+    def move_char(self, ind):
+        if ind == 1:
+            self.rect.x += 20
+        if ind == 2:
+            self.rect.x -= 20
+        if ind == 3:
+            self.rect.y -= 20
+        self.collide_with_platform(ind, tiles_group)
+
+    def collide_with_platform(self, ind, ttl):
+        for title in ttl:
+            if pygame.sprite.collide_mask(self, title):
+                if ind == 1:
+                    self.rect.right = title.rect.left
+                if ind == 2:
+                    self.rect.left = title.rect.right
+                if ind == 3:
+                    self.rect.top = title.rect.bottom
+
+
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 4 - WIDTH // 6)
+
+
+camera = Camera()
 
 
 player_image = load_image('mar.png')
@@ -181,14 +210,17 @@ while running:
                 running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT:
-                    move_char(1, player)
+                    player.move_char(1)
                 if event.key == pygame.K_LEFT:
-                    move_char(2, player)
+                    player.move_char(2)
                 if event.key == pygame.K_UP:
-                    move_char(3, player)
+                    player.move_char(3)
         screen.blit(fn, (0, 0))
         all_sprites.draw(screen)
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
         pygame.display.flip()
-        clock.tick(50)
+        clock.tick(20)
 
     pygame.quit()
