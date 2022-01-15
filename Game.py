@@ -1,16 +1,28 @@
 import pygame
 import sys
 import os
+from Box2D.b2 import world
+
+
+PPM = 20.0
+TARGET_FPS = 60
+TIME_STEP = 1.0 / TARGET_FPS
+
 
 pygame.init()
 FPS = 50
 WIDTH = 1000
 HEIGHT = 500
-speed = 5
+speed = 20
+
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
+
+world = world(gravity=(0, -10))
+
+ground_body = world.CreateStaticBody()
 
 
 def load_image(name, color_key=None):
@@ -139,6 +151,8 @@ class Tile(pygame.sprite.Sprite):
                 tile_width * pos_x, tile_height * pos_y)
 
 
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
@@ -146,15 +160,22 @@ class Player(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y + 5)
+        self.jumpc = 10
+        self.jump_state = False
 
     def move_char(self, ind):
         if ind == 1:
-            self.rect.x += 20
+            self.rect.x += speed
         if ind == 2:
-            self.rect.x -= 20
+            self.rect.x -= speed
         if ind == 3:
-            self.rect.y -= 20
+            self.rect.y -= speed
+        if ind == 4:
+            self.rect.y += 100
         self.collide_with_platform(ind, tiles_group)
+
+    def change_j_state(self, state):
+        self.jump_state = state
 
     def collide_with_platform(self, ind, ttl):
         for title in ttl:
@@ -165,6 +186,8 @@ class Player(pygame.sprite.Sprite):
                     self.rect.left = title.rect.right
                 if ind == 3:
                     self.rect.top = title.rect.bottom
+                if ind == 4:
+                    self.rect.bottom = title.rect.top
 
 
 class Camera:
@@ -209,12 +232,24 @@ while running:
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.jump_state = True
                 if event.key == pygame.K_RIGHT:
                     player.move_char(1)
                 if event.key == pygame.K_LEFT:
                     player.move_char(2)
-                if event.key == pygame.K_UP:
-                    player.move_char(3)
+                if event.key == pygame.K_DOWN:
+                    player.move_char(4)
+
+        if player.jump_state is True:
+            if player.jumpc >= -10:
+                player.rect.y -= player.jumpc
+                player.jumpc -= 1
+                player.collide_with_platform(4, tiles_group)
+            else:
+                player.jumpc = 10
+                player.jump_state = False
+                player.collide_with_platform(4, tiles_group)
         screen.blit(fn, (0, 0))
         all_sprites.draw(screen)
         camera.update(player)
