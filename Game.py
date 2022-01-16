@@ -1,7 +1,6 @@
 import pygame
 import sys
 import os
-from Box2D.b2 import world
 
 
 PPM = 20.0
@@ -19,10 +18,6 @@ speed = 20
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
-
-world = world(gravity=(0, -10))
-
-ground_body = world.CreateStaticBody()
 
 
 def load_image(name, color_key=None):
