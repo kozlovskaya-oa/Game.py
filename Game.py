@@ -1,7 +1,3 @@
-#hndsjflosdnmfrjfowlekjflsdkmk
-
-
-
 import pygame
 import sys
 import os
@@ -137,7 +133,7 @@ class Monster(pygame.sprite.Sprite):
 
 class Money(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
-        super().__init__(monster_group, all_sprites)
+        super().__init__(money_group, all_sprites)
         self.image = load_image('star.png')
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -154,6 +150,7 @@ class Player(pygame.sprite.Sprite):
         self.jump_state = False
         self.life = 10
         self.count = 0
+        fall_state = False
 
     def move_char(self, ind):
         if ind == 1:
@@ -190,6 +187,13 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.collide_mask(self, money):
                 self.count += 1
                 money.remove(money_group)
+                money.remove(all_sprites)
+
+    def fall(self, ttl):
+        for elem in ttl:
+            pass
+
+
 
 
 class Camera:
@@ -260,5 +264,5 @@ while running:
             camera.apply(sprite)
         pygame.display.flip()
         clock.tick(20)
-
     pygame.quit()
+print(player.count)
