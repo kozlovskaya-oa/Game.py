@@ -1,3 +1,7 @@
+#hndsjflosdnmfrjfowlekjflsdkmk
+
+
+
 import pygame
 import sys
 import os
@@ -13,7 +17,6 @@ FPS = 50
 WIDTH = 1000
 HEIGHT = 500
 speed = 20
-
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
