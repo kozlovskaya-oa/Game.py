@@ -8,13 +8,12 @@ TARGET_FPS = 60
 TIME_STEP = 1.0 / TARGET_FPS
 
 
-
-
 pygame.init()
 FPS = 50
 WIDTH = 1000
 HEIGHT = 500
 speed = 20
+
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
