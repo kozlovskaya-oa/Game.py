@@ -8,6 +8,8 @@ TARGET_FPS = 60
 TIME_STEP = 1.0 / TARGET_FPS
 
 
+
+
 pygame.init()
 FPS = 50
 WIDTH = 1000
