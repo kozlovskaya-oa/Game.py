@@ -13,7 +13,7 @@ pygame.init()
 FPS = 50
 WIDTH = 1000
 HEIGHT = 500
-speed = 20
+speed = 15
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -74,46 +74,6 @@ def start_screen():
         clock.tick(FPS)
 
 
-"""tile_images = {
-    'wall': load_image('img_1.png'), "empty": None}"""
-
-"""all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-
-
-
-def load_level(filename):
-    filename = "data/" + filename
-    # читаем уровень, убирая символы перевода строки
-    with open(filename, 'r') as mapFile:
-        level_map = [line.strip() for line in mapFile]
-
-    # и подсчитываем максимальную длину
-    max_width = max(map(len, level_map))
-
-    # дополняем каждую строку пустыми клетками ('.')
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
-
-
-class Tile(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(tiles_group, all_sprites)
-        self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
-"""
-
-"""all_sprites = pygame.sprite.Group()
-sprite = pygame.sprite.Sprite()
-sprite.image = pygame.transform.scale(load_image("tst.png"), (100, 100))
-sprite.rect = (sprite.image.get_rect())
-all_sprites.add(sprite)
-
-
-sprite.rect.x = 5
-sprite.rect.y = 290"""
-
 fn = load_image("img_2.png")
 
 PLATFORM_WIDTH = 32
@@ -137,6 +97,8 @@ def load_level(filename):
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+monster_group = pygame.sprite.Group()
+money_group = pygame.sprite.Group()
 
 tile_width = tile_height = 50
 
@@ -151,6 +113,35 @@ class Tile(pygame.sprite.Sprite):
                 tile_width * pos_x, tile_height * pos_y)
 
 
+class Monster(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(monster_group, all_sprites)
+        self.image = load_image('pt.png')
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.life = 2
+        self.up_state = True
+
+    def update(self):
+        if self.up_state:
+            self.rect.y -= 10
+            if self.rect.y < 20:
+                self.rect.y = 20
+                self.up_state = False
+        else:
+            self.rect.y += 10
+            for title in tiles_group:
+                if pygame.sprite.collide_mask(self, title):
+                    self.rect.bottom = title.rect.top
+                    self.up_state = True
+
+
+class Money(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(monster_group, all_sprites)
+        self.image = load_image('star.png')
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
 
 class Player(pygame.sprite.Sprite):
@@ -162,6 +153,8 @@ class Player(pygame.sprite.Sprite):
             tile_width * pos_x + 15, tile_height * pos_y + 5)
         self.jumpc = 10
         self.jump_state = False
+        self.life = 10
+        self.count = 0
 
     def move_char(self, ind):
         if ind == 1:
@@ -171,8 +164,9 @@ class Player(pygame.sprite.Sprite):
         if ind == 3:
             self.rect.y -= speed
         if ind == 4:
-            self.rect.y += 100
+             self.rect.y += 100
         self.collide_with_platform(ind, tiles_group)
+        self.collide_with_money(money_group)
 
     def change_j_state(self, state):
         self.jump_state = state
@@ -188,6 +182,15 @@ class Player(pygame.sprite.Sprite):
                     self.rect.top = title.rect.bottom
                 if ind == 4:
                     self.rect.bottom = title.rect.top
+
+    def collide_with_monster(self, type):
+        pass
+
+    def collide_with_money(self, mn):
+        for money in mn:
+            if pygame.sprite.collide_mask(self, money):
+                self.count += 1
+                money.remove(money_group)
 
 
 class Camera:
@@ -219,6 +222,10 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '@':
                 new_player = Player(x, y)
+            elif level[y][x] == '$':
+                Money(x, y)
+            elif level[y][x] == '&':
+                Monster(x, y)
     return new_player, x, y
 
 
