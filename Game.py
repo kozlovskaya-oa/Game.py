@@ -16,7 +16,7 @@ pygame.init()
 FPS = 50
 WIDTH = 1000
 HEIGHT = 500
-speed = 15
+speed = 10
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -52,13 +52,13 @@ def start_screen():
     fon = pygame.transform.scale(load_image('img.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
-    text_coord = 50
+    text_coord = 100
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
-        intro_rect.x = 10
+        intro_rect.x = 100
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
@@ -146,7 +146,7 @@ class Money(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = player_image
+        self.image = load_image('mar.png')
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y + 5)
@@ -163,7 +163,7 @@ class Player(pygame.sprite.Sprite):
         if ind == 3:
             self.rect.y -= speed
         if ind == 4:
-             self.rect.y += 100
+            self.rect.y += 100
         self.collide_with_platform(ind, tiles_group)
         self.collide_with_money(money_group)
 
@@ -209,9 +209,6 @@ class Camera:
 
 
 camera = Camera()
-
-
-player_image = load_image('mar.png')
 
 
 def generate_level(level):
