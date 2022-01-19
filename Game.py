@@ -1,7 +1,3 @@
-#hndsjflosdnmfrjfowlekjflsdkmk
-
-
-
 import pygame
 import sys
 import os
@@ -49,7 +45,7 @@ def start_screen():
     intro_text = ["Приключения Бобы", "",
                   "Преодолевай препятствия и выигрывай"]
 
-    fon = pygame.transform.scale(load_image('img.png'), (WIDTH, HEIGHT))
+    fon = pygame.transform.scale(load_image('image\лес.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 100
@@ -73,7 +69,7 @@ def start_screen():
         clock.tick(FPS)
 
 
-fn = load_image("img_2.png")
+fn = load_image("image\джунгли.jpg")
 
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
@@ -106,7 +102,7 @@ class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
         if tile_type == "wall":
-            self.image = load_image('box.png')
+            self.image = load_image('image\земля2.png')
             self.mask = pygame.mask.from_surface(self.image)
             self.rect = self.image.get_rect().move(
                 tile_width * pos_x, tile_height * pos_y)
@@ -115,7 +111,7 @@ class Tile(pygame.sprite.Sprite):
 class Monster(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(monster_group, all_sprites)
-        self.image = load_image('pt.png')
+        self.image = load_image('image\pt.png')
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.life = 2
@@ -138,7 +134,7 @@ class Monster(pygame.sprite.Sprite):
 class Money(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(monster_group, all_sprites)
-        self.image = load_image('star.png')
+        self.image = load_image('image\star.png')
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
@@ -146,7 +142,7 @@ class Money(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = load_image('mar.png')
+        self.image = load_image('image\mar.png')
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y + 5)
