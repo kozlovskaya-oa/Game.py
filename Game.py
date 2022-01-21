@@ -10,9 +10,12 @@ TIME_STEP = 1.0 / TARGET_FPS
 
 pygame.init()
 FPS = 50
-WIDTH = 1000
+WIDTH = 900
 HEIGHT = 500
-speed = 10
+speed = 15
+
+JUMP_POWER = 10
+GRAVITY = 0.7
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -45,7 +48,7 @@ def start_screen():
     intro_text = ["Приключения Бобы", "",
                   "Преодолевай препятствия и выигрывай"]
 
-    fon = pygame.transform.scale(load_image('img.png'), (WIDTH, HEIGHT))
+    fon = pygame.transform.scale(load_image('start.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 100
@@ -69,7 +72,89 @@ def start_screen():
         clock.tick(FPS)
 
 
-fn = load_image("img_2.png")
+def dead_sreen():
+    intro_text = ["Вы умерли", "",
+                  "Нажмите левую кнопку мыши", "чтобы начать заново"]
+
+    fon = pygame.transform.scale(load_image('death.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 200
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 250
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def end_screen():
+    intro_text = ["СПАСИБО ЗА ИГРУ", "",
+                  "ВОЗВРАЩАЙТЕСЬ", "ЗА НОВЫМИ ПРИКЛЮЧЕНИЯМИ!"]
+
+    fon = pygame.transform.scale(load_image('end.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 150
+    for line in intro_text:
+        string_rendered = font.render(line, 100, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 200
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def win_screen():
+    intro_text = ["ПОЗДРАВЛЯЕМ", "",
+                  "ВЫ ПРОШЛИ УРОВЕНЬ"]
+
+    fon = pygame.transform.scale(load_image('win (2).png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 150
+    for line in intro_text:
+        string_rendered = font.render(line, 100, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 200
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                end_screen()  # начинаем игру
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+fn = load_image("jungle_2.jpg")
 
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
@@ -94,6 +179,8 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 monster_group = pygame.sprite.Group()
 money_group = pygame.sprite.Group()
+flag_group = pygame.sprite.Group()
+lava_group = pygame.sprite.Group()
 
 tile_width = tile_height = 50
 
@@ -102,10 +189,19 @@ class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
         if tile_type == "wall":
-            self.image = load_image('box.png')
+            self.image = load_image('box.jpg')
             self.mask = pygame.mask.from_surface(self.image)
             self.rect = self.image.get_rect().move(
                 tile_width * pos_x, tile_height * pos_y)
+
+
+class Flag(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(flag_group, all_sprites)
+        self.image = load_image('flag.png')
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
 
 
 class Monster(pygame.sprite.Sprite):
@@ -118,6 +214,10 @@ class Monster(pygame.sprite.Sprite):
         self.up_state = True
 
     def update(self):
+        if self.life <= 0:
+            self.remove(all_sprites)
+            self.remove(monster_group)
+
         if self.up_state:
             self.rect.y -= 10
             if self.rect.y < 20:
@@ -139,6 +239,31 @@ class Money(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
 
+class Lava(pygame.sprite.Sprite):
+    def __init__(self, columns, rows, x, y):
+        super().__init__(lava_group, all_sprites)
+        self.x = x
+        self.y = y
+        self.frames = []
+        self.cut_sheet(load_image("lava_2.png"), columns, rows)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(tile_width * x, tile_height * y)
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
@@ -146,54 +271,88 @@ class Player(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y + 5)
-        self.jumpc = 10
+        self.jump_power = 10
         self.jump_state = False
-        self.life = 10
-        self.count = 0
-        fall_state = False
+        self.life = 2
+        self.score = 0
+        self.coins_count = 0
+        self.yspeed = 0
+        self.xspeed = 15
+        self.onGround = True
 
-    def move_char(self, ind):
+    def move_char(self, ind, jump, hit):
         if ind == 1:
-            self.rect.x += speed
+            self.xspeed += 15
         if ind == 2:
-            self.rect.x -= speed
-        if ind == 3:
-            self.rect.y -= speed
-        if ind == 4:
-            self.rect.y += 100
-        self.collide_with_platform(ind, tiles_group)
+            self.xspeed -= 15
+        if ind == 0:
+            self.xspeed = 0
+        if jump:
+            if self.onGround:
+                self.yspeed -= self.jump_power
+                self.onGround = False
+        if not self.onGround:
+            self.yspeed += GRAVITY
+
+        self.onGround = False
+
+        self.rect.y += self.yspeed
+        self.collide_with_platform(0, self.yspeed, tiles_group)
+
+        self.rect.x += self.xspeed
+        self.collide_with_platform(self.xspeed, 0, tiles_group)
+
         self.collide_with_money(money_group)
+        self.collide_with_monster(monster_group, hit)
 
-    def change_j_state(self, state):
-        self.jump_state = state
-
-    def collide_with_platform(self, ind, ttl):
+    def collide_with_platform(self, x_speed, y_speed, ttl):
         for title in ttl:
             if pygame.sprite.collide_mask(self, title):
-                if ind == 1:
+                if x_speed > 0:
                     self.rect.right = title.rect.left
-                if ind == 2:
+                if x_speed < 0:
                     self.rect.left = title.rect.right
-                if ind == 3:
-                    self.rect.top = title.rect.bottom
-                if ind == 4:
-                    self.rect.bottom = title.rect.top
 
-    def collide_with_monster(self, type):
-        pass
+                if y_speed < 0:
+                    self.rect.top = title.rect.bottom
+                    self.yspeed = 0
+
+                if self.yspeed > 0:
+                    self.rect.bottom = title.rect.top
+                    self.onGround = True
+                    self.yspeed = 0
+
+    def collide_with_monster(self, mnstr, hit):
+        for monster in mnstr:
+            if pygame.sprite.collide_mask(self, monster):
+                if hit == 1:
+                    self.life -= 1
+                else:
+                    monster.life -= 1
+                monster.up_state = True
 
     def collide_with_money(self, mn):
         for money in mn:
             if pygame.sprite.collide_mask(self, money):
-                self.count += 1
+                self.coins_count += 1
                 money.remove(money_group)
                 money.remove(all_sprites)
 
-    def fall(self, ttl):
-        for elem in ttl:
-            pass
+    def collide_with_flag(self, flag):
+        for f in flag:
+            if pygame.sprite.collide_mask(self, f):
+                win_screen()
 
+    def die(self):
+        if self.life == 0:
+            return True
 
+    def show_info(self, screen):
+        font = pygame.font.Font(None, 50)
+        text = font.render(f"монеты: {self.coins_count}", True, (0, 0, 0))
+        screen.blit(text, (5, 5))
+        text_2 = font.render(f"жизнь: {self.life}", True, (0, 0, 0))
+        screen.blit(text_2, (5, 50))
 
 
 class Camera:
@@ -226,29 +385,49 @@ def generate_level(level):
                 Money(x, y)
             elif level[y][x] == '&':
                 Monster(x, y)
+
+            elif level[y][x] == '!':
+                Flag(x, y)
+            elif level[y][x] == '%':
+                Lava(5, 1, x, y)
     return new_player, x, y
 
 
 start_screen()
 player, level_x, level_y = generate_level(load_level('level.txt'))
 running = True
+up = False
 while running:
     while running:
         all_sprites.update()
+        hitting = 1
+        cur_ind = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                end_screen()
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    player.jump_state = True
+                if event.key == pygame.K_UP:
+                    """player.jump_state = True
+                    motion = True"""
+                    up = True
                 if event.key == pygame.K_RIGHT:
-                    player.move_char(1)
+                    cur_ind = 1
                 if event.key == pygame.K_LEFT:
-                    player.move_char(2)
-                if event.key == pygame.K_DOWN:
-                    player.move_char(4)
+                    cur_ind = 2
+                if event.key == pygame.K_SPACE:
+                    hitting = 2
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    cur_ind = 0
+                if event.key == pygame.K_LEFT:
+                    cur_ind = 0
+                if event.key == pygame.K_SPACE:
+                    hitting = 1
+                if event.key == pygame.K_UP:
+                    up = False
 
-        if player.jump_state is True:
+        """if player.jump_state is True:
             if player.jumpc >= -10:
                 player.rect.y -= player.jumpc
                 player.jumpc -= 1
@@ -257,12 +436,29 @@ while running:
                 player.jumpc = 10
                 player.jump_state = False
                 player.collide_with_platform(4, tiles_group)
+        player.collide_with_monster(monster_group, hitting)"""
+        player.move_char(cur_ind, up, hitting)
         screen.blit(fn, (0, 0))
         all_sprites.draw(screen)
         camera.update(player)
         for sprite in all_sprites:
             camera.apply(sprite)
+        if player.collide_with_flag(flag_group):
+            win_screen()
+        player.show_info(screen)
+        if player.die():
+            for elem in tiles_group:
+                elem.remove(tiles_group)
+                elem.remove(all_sprites)
+            for elem in monster_group:
+                elem.remove(monster_group)
+                elem.remove(all_sprites)
+            for elem in player_group:
+                elem.remove(monster_group)
+                elem.remove(all_sprites)
+            dead_sreen()
+            player, level_x, level_y = generate_level(load_level('level.txt'))
+            up = False
         pygame.display.flip()
-        clock.tick(20)
+        clock.tick(25)
     pygame.quit()
-print(player.count)
