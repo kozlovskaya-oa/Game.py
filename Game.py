@@ -207,11 +207,30 @@ class Flag(pygame.sprite.Sprite):
 class Monster(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(monster_group, all_sprites)
-        self.image = load_image('pt.png')
+        self.frames = []
+        self.cut_sheet(load_image("bird.png", -1), 3, 3)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.life = 2
         self.up_state = True
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
 
     def update(self):
         if self.life <= 0:
@@ -229,6 +248,8 @@ class Monster(pygame.sprite.Sprite):
                 if pygame.sprite.collide_mask(self, title):
                     self.rect.bottom = title.rect.top
                     self.up_state = True
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
 
 
 class Money(pygame.sprite.Sprite):
@@ -249,6 +270,7 @@ class Lava(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(tile_width * x, tile_height * y)
+        self.mask = pygame.mask.from_surface(self.image)
 
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
@@ -304,6 +326,7 @@ class Player(pygame.sprite.Sprite):
 
         self.collide_with_money(money_group)
         self.collide_with_monster(monster_group, hit)
+        self.collide_with_lava(lava_group)
 
     def collide_with_platform(self, x_speed, y_speed, ttl):
         for title in ttl:
@@ -342,6 +365,12 @@ class Player(pygame.sprite.Sprite):
         for f in flag:
             if pygame.sprite.collide_mask(self, f):
                 win_screen()
+
+    def collide_with_lava(self, lava):
+        for f in lava:
+            if pygame.sprite.collide_mask(self, f):
+                self.rect.bottom = f.rect.bottom
+                self.life -= 1
 
     def die(self):
         if self.life == 0:
@@ -455,6 +484,9 @@ while running:
                 elem.remove(all_sprites)
             for elem in player_group:
                 elem.remove(monster_group)
+                elem.remove(all_sprites)
+            for elem in lava_group:
+                elem.remove(lava_group)
                 elem.remove(all_sprites)
             dead_sreen()
             player, level_x, level_y = generate_level(load_level('level.txt'))
