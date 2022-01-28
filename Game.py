@@ -3,27 +3,25 @@ import sys
 import os
 
 
-PPM = 20.0
-TARGET_FPS = 60
-TIME_STEP = 1.0 / TARGET_FPS
-
-
 pygame.init()
-FPS = 50
+
+FPS = 25
 WIDTH = 900
 HEIGHT = 500
-speed = 15
-
-JUMP_POWER = 10
 GRAVITY = 0.7
 
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Boba adventures')
+
 clock = pygame.time.Clock()
-all_sprites = pygame.sprite.Group()
+
 PLATFORM_WIDTH = 32
 PLATFORM_HEIGHT = 32
 PLATFORM_COLOR = (255, 255, 255)
+
+
+all_sprites = pygame.sprite.Group()
 
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
@@ -37,7 +35,7 @@ tile_width = tile_height = 50
 
 def load_image(name, color_key=None):
     try:
-        fullname = os.path.join(name)
+        fullname = os.path.join('data', name)
         image = pygame.image.load(fullname)
     except pygame.error as message:
         print(f'В папке отсутствует файл: {name}')
@@ -71,7 +69,7 @@ def terminate():
 def start_screen():
     intro_text = ["Приключения Бобы", "",
                   "Преодолевай препятствия и выигрывай", "чтобы передвигаться нажимай клавиши стрелок",
-                  "чтобы одолевать монстров нажмите пробел", "чтобы победить наберите 200 очков"]
+                  "чтобы одолевать монстров нажмите пробел", "наберите как можно больше очков"]
 
     fon = pygame.transform.scale(load_image('start.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -99,7 +97,7 @@ def start_screen():
 
 def dead_sreen():
     intro_text = ["Вы умерли", "",
-                  "Нажмите левую кнопку мыши", "чтобы начать заново"]
+                  "Нажмите кнопку мыши", "чтобы начать заново"]
 
     fon = pygame.transform.scale(load_image('death.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -118,8 +116,7 @@ def dead_sreen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            elif event.type == pygame.KEYDOWN or \
-                    event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 return  # начинаем игру
         pygame.display.flip()
         clock.tick(FPS)
@@ -181,14 +178,12 @@ def win_screen():
 
 def load_level(filename):
     filename = filename
-    # читаем уровень, убирая символы перевода строки
+
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
 
-    # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
 
-    # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
@@ -409,7 +404,7 @@ class Player(pygame.sprite.Sprite):
 
     def show_info(self, screen, level, score):
         font = pygame.font.Font(None, 50)
-        text = font.render(f"монеты: {self.coins_count}", True, (0, 0, 0))
+        text = font.render(f"цветы: {self.coins_count}", True, (0, 0, 0))
         screen.blit(text, (5, 5))
         text_2 = font.render(f"жизнь: {self.life}", True, (0, 0, 0))
         screen.blit(text_2, (5, 50))
@@ -420,17 +415,14 @@ class Player(pygame.sprite.Sprite):
 
 
 class Camera:
-    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
-    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
-    # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 4 - WIDTH // 6)
 
@@ -458,11 +450,11 @@ def generate_level(level):
 
 levels = ["level.txt", "level_2.txt", "level_3.txt"]
 start_screen()
-player, level_x, level_y = generate_level(load_level(levels[0]))
+cur_level = 1
+player, level_x, level_y = generate_level(load_level(levels[cur_level - 1]))
 running = True
 up = False
 hitting = 1
-cur_level = 1
 score = 0
 cur_ind = 0
 cur_st = 0
@@ -557,5 +549,5 @@ while running:
             player, level_x, level_y = generate_level(load_level(levels[cur_level - 1]))
             up = False
         pygame.display.flip()
-        clock.tick(25)
+        clock.tick(FPS)
     pygame.quit()
