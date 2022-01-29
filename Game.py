@@ -176,8 +176,8 @@ def win_screen():
         clock.tick(FPS)
 
 
-def load_level(filename):
-    filename = filename
+def load_level(name):
+    filename = os.path.join('data', name)
 
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
